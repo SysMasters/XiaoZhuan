@@ -13,7 +13,7 @@ data class MarketInfo(
     val lastVersion: Version? = null
 ) {
     data class Version(
-        val code: Long,
-        val name: String,
+        val code: Long?,
+        val name: String?,
     )
 }

@@ -31,17 +31,17 @@ data class HWAppInfoResp(
          * 11：撤销上架
          */
         @Json(name = "releaseState")
-        val releaseState: Int,
+        val releaseState: Int?,
         @Json(name = "versionCode")
-        val versionCode: Long,
+        val versionCode: Long?,
         @Json(name = "versionNumber")
-        val versionNumber: String,
+        val versionNumber: String?,
         /**
          *
          * 在架版本版本号
          */
         @Json(name = "onShelfVersionNumber")
-        val onShelfVersionNumber: String,
+        val onShelfVersionNumber: String?,
     ) {
         fun toAppState(): MarketInfo {
             val reviewState = when (releaseState) {

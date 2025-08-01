@@ -186,7 +186,7 @@ class ApkPageState(val apkConfig: ApkConfig) {
             return false
         }
         val lastVersion = marketInfo?.lastVersion
-        if (apkInfo != null && lastVersion != null && apkInfo.versionCode <= lastVersion.code) {
+        if (apkInfo != null && lastVersion != null && apkInfo.versionCode <= (lastVersion.code?:0)) {
             message?.set("要提交的Apk版本号需大于线上最新版本号")
             return false
         }

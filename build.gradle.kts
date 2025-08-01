@@ -5,6 +5,8 @@ import java.util.*
 plugins {
     kotlin("jvm")
     id("org.jetbrains.compose")
+    id("org.jetbrains.kotlin.multiplatform") apply false
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 val appVersion = AppVersion(1, 2, 0)
@@ -38,12 +40,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.8.0")
     implementation("org.jetbrains.androidx.navigation:navigation-compose:2.8.0-alpha10")
-    // Enables FileKit without Compose dependencies
-    implementation("io.github.vinceglb:filekit-core:0.6.2")
-
-    // Enables FileKit with Composable utilities
-    implementation("io.github.vinceglb:filekit-compose:0.6.2")
-
+    implementation("io.github.vinceglb:filekit-dialogs:0.10.0")
+    implementation("io.github.vinceglb:filekit-dialogs-compose:0.10.0")
     implementation("net.dongliu:apk-parser:2.6.10")
 
 }

@@ -1,18 +1,24 @@
 package com.xigong.xiaozhuan.util
 
-import io.github.vinceglb.filekit.core.FileKit
-import io.github.vinceglb.filekit.core.FileKitPlatformSettings
-import io.github.vinceglb.filekit.core.PickerMode
-import io.github.vinceglb.filekit.core.PickerType
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.FileKitMode
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.openFilePicker
+import io.github.vinceglb.filekit.downloadDir
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.awt.Window
 import java.io.File
 import javax.swing.JFileChooser
-import javax.swing.JFileChooser.*
+import javax.swing.JFileChooser.APPROVE_OPTION
+import javax.swing.JFileChooser.DIRECTORIES_ONLY
+import javax.swing.JFileChooser.FILES_ONLY
 import javax.swing.filechooser.FileNameExtensionFilter
 
-private val fileSelector = if (isWindows()) JFileSelector else FileKitSelector
+//private val fileSelector = if (isWindows()) JFileSelector else FileKitSelector
+private val fileSelector = FileKitSelector
 
 interface FileSelector {
 
@@ -29,7 +35,11 @@ interface FileSelector {
      * @param desc 描述
      * @param extensions 文件名扩展名,不可为空
      */
-    suspend fun selectedFile(defaultFile: File? = null, desc: String?, extensions: List<String>): File?
+    suspend fun selectedFile(
+        defaultFile: File? = null,
+        desc: String?,
+        extensions: List<String>
+    ): File?
 
     companion object : FileSelector by fileSelector
 
@@ -73,19 +83,26 @@ private fun getWindow(): Window? {
  */
 private object FileKitSelector : FileSelector {
     override suspend fun selectedDir(defaultDir: File?): File? {
-        check(FileKit.isDirectoryPickerSupported()) { "当前平台不支持选择目录" }
-        return FileKit.pickDirectory(
-            initialDirectory = defaultDir?.absolutePath,
-            platformSettings = FileKitPlatformSettings(getWindow())
+        return FileKit.openFilePicker(
+            directory = if (defaultDir == null) FileKit.downloadDir else PlatformFile(
+                defaultDir.absolutePath ?: ""
+            ),
+            dialogSettings = FileKitDialogSettings.createDefault()
         )?.file
     }
 
-    override suspend fun selectedFile(defaultFile: File?, desc: String?, extensions: List<String>): File? {
-        return FileKit.pickFile(
-            mode = PickerMode.Single,
-            type = PickerType.File(extensions),
-            initialDirectory = defaultFile?.absolutePath,
-            platformSettings = FileKitPlatformSettings(getWindow())
+    override suspend fun selectedFile(
+        defaultFile: File?,
+        desc: String?,
+        extensions: List<String>
+    ): File? {
+        return FileKit.openFilePicker(
+            mode = FileKitMode.Single,
+            type = FileKitType.File(extensions),
+            directory = if (defaultFile == null) FileKit.downloadDir else PlatformFile(
+                defaultFile.absolutePath ?: ""
+            ),
+            dialogSettings = FileKitDialogSettings.createDefault()
         )?.file
     }
 
