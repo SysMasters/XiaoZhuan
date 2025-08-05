@@ -29,6 +29,16 @@ repositories {
 }
 
 dependencies {
+    implementation(files("libs/aliyun-sdk-oss-3.17.4.jar"))
+    implementation(files("libs/aliyun-sdk-oss-3.17.4-javadoc.jar"))
+    implementation(files("libs/aliyun-sdk-oss-3.17.4-sources.jar"))
+    implementation(files("libs/commons-codec-1.9.jar"))
+    implementation(files("libs/commons-logging-1.2.jar"))
+    implementation(files("libs/hamcrest-core-1.1.jar"))
+    implementation(files("libs/httpclient-4.4.1.jar"))
+    implementation(files("libs/httpcore-4.4.1.jar"))
+    implementation(files("libs/jdom2-2.0.6.jar"))
+
     implementation(compose.desktop.currentOs)
     implementation("com.squareup.okio:okio:3.7.0")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
@@ -49,7 +59,7 @@ dependencies {
 // 小米应用市场
 dependencies {
     implementation("com.google.code.gson:gson:2.8.6")
-//    implementation("net.sf.json-lib:json-lib:2.2.3")
+//    implementation("net.sf.json-libs:json-libs:2.2.3")
     implementation("commons-codec:commons-codec:1.4")
     implementation("org.bouncycastle:bcprov-jdk15on:1.62")
 }

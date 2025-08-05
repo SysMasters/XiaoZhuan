@@ -5,6 +5,7 @@ import com.xigong.xiaozhuan.channel.honor.HonorChannelTask
 import com.xigong.xiaozhuan.channel.huawei.HuaweiChannelTask
 import com.xigong.xiaozhuan.channel.mi.MiChannelTask
 import com.xigong.xiaozhuan.channel.oppo.OPPOChannelTask
+import com.xigong.xiaozhuan.channel.sbd.SbdChannelTask
 import com.xigong.xiaozhuan.channel.vivo.VIVOChannelTask
 
 private const val DEBUG_TASK = false
@@ -12,6 +13,7 @@ private const val DEBUG_TASK = false
 object ChannelRegistry {
 
     private val realChannels: List<ChannelTask> = listOf(
+        SbdChannelTask(),
         HuaweiChannelTask(),
         MiChannelTask(),
         OPPOChannelTask(),
@@ -20,6 +22,7 @@ object ChannelRegistry {
     )
 
     private val mockChannels: List<ChannelTask> = listOf(
+        MockChannelTask("sbd", "sbd"),
         MockChannelTask("华为", "HUAWEI"),
         MockChannelTask("小米", "MI"),
         MockChannelTask("OPPO", "OPPO"),

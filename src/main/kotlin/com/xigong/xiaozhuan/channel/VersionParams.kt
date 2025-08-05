@@ -8,5 +8,15 @@ data class VersionParams(
     /**
      * 上线时间，为0，表示立即上线,否则保存的是上线时间毫秒值
      */
-    val onlineTime: Long
+    val onlineTime: Long,
+
+    /**
+     * 是否强制更新
+     */
+    val forceUpdate: Boolean = true,
+
+    /**
+     * 更新标题
+     */
+    val updateTitle: String = "",
 )
