@@ -28,6 +28,18 @@ repositories {
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
 }
 
+sourceSets {
+    main {
+        java {
+            srcDirs("src/main/kotlin")
+        }
+    }
+}
+
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
+}
+
 dependencies {
     implementation(files("libs/aliyun-sdk-oss-3.17.4.jar"))
     implementation(files("libs/aliyun-sdk-oss-3.17.4-javadoc.jar"))

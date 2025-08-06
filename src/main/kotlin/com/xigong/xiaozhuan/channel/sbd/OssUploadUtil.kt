@@ -6,7 +6,7 @@ import com.aliyun.oss.OSS
 import com.aliyun.oss.OSSClientBuilder
 import com.aliyun.oss.OSSException
 import com.aliyun.oss.common.auth.CredentialsProvider
-import com.aliyun.oss.common.auth.CredentialsProviderFactory
+import com.aliyun.oss.common.auth.DefaultCredentialProvider
 import com.aliyun.oss.common.comm.SignVersion
 import com.aliyun.oss.event.ProgressEvent
 import com.aliyun.oss.event.ProgressEventType
@@ -14,13 +14,15 @@ import com.aliyun.oss.event.ProgressListener
 import com.aliyun.oss.model.PutObjectRequest
 import java.io.File
 
+
 /**
  * 阿里云OSS上传工具类
  */
 class OssUploadUtil private constructor(
-    private val endpoint: String,
-    private val region: String,
-    private val credentialsProvider: CredentialsProvider
+    private val accessKeyId: String,
+    private val secretAccessKey: String,
+    private val bucketName: String,
+    private val objectName: String,
 ) {
     // OSS客户端配置
     private val clientConfig: ClientBuilderConfiguration = ClientBuilderConfiguration().apply {
@@ -35,23 +37,29 @@ class OssUploadUtil private constructor(
      * @param progressListener 进度监听器，可为null
      */
     fun uploadFile(
-        bucketName: String,
-        objectName: String,
         localFilePath: String,
         progressListener: ProgressListener? = null
     ): Boolean {
         var ossClient: OSS? = null
         return try {
             // 创建OSS客户端
+            val credentialsProvider: CredentialsProvider =
+                DefaultCredentialProvider(
+                    accessKeyId,
+                    secretAccessKey,
+                    ""
+                )
             ossClient = OSSClientBuilder.create()
-                .endpoint(endpoint)
+                .endpoint("oss-cn-shanghai.aliyuncs.com")
                 .credentialsProvider(credentialsProvider)
                 .clientConfiguration(clientConfig)
-                .region(region)
+                .region("cn-shanghai")
                 .build()
 
             // 创建上传请求
-            val putObjectRequest = PutObjectRequest(bucketName, objectName, File(localFilePath))
+            val file = File(localFilePath)
+            val putObjectRequest =
+                PutObjectRequest(bucketName, objectName, file)
 
             // 设置进度监听器
             progressListener?.let {
@@ -77,7 +85,7 @@ class OssUploadUtil private constructor(
     /**
      * 默认的上传进度监听器
      */
-    class DefaultProgressListener : ProgressListener {
+    open class DefaultProgressListener : ProgressListener {
         private var bytesWritten: Long = 0
         private var totalBytes: Long = -1
         private var isSucceed: Boolean = false
@@ -126,11 +134,12 @@ class OssUploadUtil private constructor(
          * @param credentialsProvider 凭证提供者
          */
         fun create(
-            endpoint: String,
-            region: String,
-            credentialsProvider: CredentialsProvider
+            accessKeyId: String,
+            secretAccessKey: String,
+            bucketName: String,
+            objectName: String,
         ): OssUploadUtil {
-            return OssUploadUtil(endpoint, region, credentialsProvider)
+            return OssUploadUtil(accessKeyId, secretAccessKey, bucketName, objectName)
         }
     }
 }
@@ -138,22 +147,17 @@ class OssUploadUtil private constructor(
 // 使用示例
 fun main() {
     // 配置信息
-    val accessKeyId = ""
-    val accessKeySecret = "yourSTSAccessKeySecret"
-    val endpoint = "https://oss-cn-shanghai.aliyuncs.com"
-    val region = "cn-shanghai"
-    val bucketName = "hautoosstest"
-    val objectName = "file/pac/query_results.csv"
     val localFilePath = "D:\\query_results.csv"
 
-    // 创建工具类实例
-    CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider()
-    val ossUploadUtil = OssUploadUtil.create(endpoint, region)
+    val accessKeyId = ""
+    val secretAccessKey = ""
+    val bucketName = "frontend-static"
+    val objectName = "file/111.apk"
+
+    val ossUploadUtil = OssUploadUtil.create(accessKeyId, secretAccessKey, bucketName, objectName)
 
     // 使用默认进度监听器上传
     val success = ossUploadUtil.uploadFile(
-        bucketName,
-        objectName,
         localFilePath,
         OssUploadUtil.DefaultProgressListener()
     )

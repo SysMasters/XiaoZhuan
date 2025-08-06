@@ -16,17 +16,22 @@ class SbdChannelTask : ChannelTask() {
 
     override val fileNameIdentify: String = "sbd"
 
-    override val paramDefine: List<Param> = listOf(CLIENT_ID, CLIENT_SECRET)
+    override val paramDefine: List<Param> =
+        listOf(CLIENT_ID, CLIENT_SECRET, ACCESS_KEY_ID, SECRET_ACCESS_KEY)
 
     private val connectClient = SbdClient()
 
     private var clientId = ""
 
     private var clientSecret = ""
+    private var accessKeyId = ""
+    private var secretAccessKey = ""
 
     override fun init(params: Map<Param, String?>) {
         clientId = params[CLIENT_ID] ?: ""
         clientSecret = params[CLIENT_SECRET] ?: ""
+        accessKeyId = params[ACCESS_KEY_ID] ?: ""
+        secretAccessKey = params[SECRET_ACCESS_KEY] ?: ""
     }
 
     override suspend fun performUpload(
@@ -35,7 +40,15 @@ class SbdChannelTask : ChannelTask() {
         versionParams: VersionParams,
         progress: (Int) -> Unit
     ) {
-        connectClient.uploadApk(file, apkInfo, clientId, clientSecret, versionParams) {
+        connectClient.uploadApk(
+            file,
+            apkInfo,
+            clientId,
+            clientSecret,
+            accessKeyId,
+            secretAccessKey,
+            versionParams
+        ) {
             progress((it * 100).roundToInt())
         }
     }
@@ -53,6 +66,8 @@ class SbdChannelTask : ChannelTask() {
     companion object {
         private val CLIENT_ID = Param("account", desc = "账号(手机号)")
         private val CLIENT_SECRET = Param("pwd", desc = "密码")
+        private val ACCESS_KEY_ID = Param("accessKeyId", desc = "阿里云oss accessKeyId")
+        private val SECRET_ACCESS_KEY = Param("secretAccessKey", desc = "阿里云oss secretAccessKey")
     }
 
 }

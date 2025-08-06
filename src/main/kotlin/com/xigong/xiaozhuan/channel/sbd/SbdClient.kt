@@ -1,6 +1,6 @@
 package com.xigong.xiaozhuan.channel.sbd
 
-import com.bxjjren.common.network.entity.SbdRequest
+import com.xigong.xiaozhuan.channel.sbd.SbdRequest
 import com.xigong.xiaozhuan.channel.VersionParams
 import com.xigong.xiaozhuan.channel.huawei.HWAppInfoResp
 import com.xigong.xiaozhuan.channel.huawei.HWTokenParams
@@ -18,20 +18,26 @@ class SbdClient {
     suspend fun uploadApk(
         file: File,
         apkInfo: ApkInfo,
-        clientId: String,
-        clientSecret: String,
+        account: String,
+        pwd: String,
+        accessKeyId: String,
+        secretAccessKey: String,
         versionParams: VersionParams,
         progressChange: ProgressChange
     ): Unit = AppLogger.action(LOG_TAG, "提交新版本") {
-//        val rawToken = getToken(clientId, clientSecret)
-//        val token = "Bearer $rawToken"
-//        val appId = getAppId(clientId, token, apkInfo.applicationId)
-//        val uploadUrl = getUploadUrl(clientId, token, appId, file)
-//        uploadFile(file, uploadUrl, progressChange)
-//        val bindResult = bindApk(clientId, token, appId, file, uploadUrl)
-//        waitApkReady(clientId, token, appId, bindResult)
-//        modifyUpdateDesc(clientId, token, appId, versionParams.updateDesc)
-//        submit(clientId, token, appId, versionParams.onlineTime)
+
+//        val bucketName = "frontend-static"
+        val bucketName = "hautoosstest"
+        val objectName = "shoubaodan3.0/app/img/home/shoubaodan_new.apk"
+
+        val ossUploadUtil =
+            OssUploadUtil.create(accessKeyId, secretAccessKey, bucketName, objectName)
+        val uploadResult = ossUploadUtil.uploadFile(
+            file.absolutePath,
+            object : OssUploadUtil.DefaultProgressListener() {
+
+            })
+
 
     }
 
@@ -81,10 +87,8 @@ class SbdClient {
     ): String = AppLogger.action(LOG_TAG, "获取token") {
         val result =
             connectApi.getToken(
-                SbdTokenParams(
-                    loginName = account,
-                    loginPassword = AESUtils.shaEncrypt(password)
-                )
+                loginName = account,
+                loginPassword = AESUtils.shaEncrypt(password)
             )
         result.throwOnFail("获取token失败")
         val accessToken = result.body?.accessToken

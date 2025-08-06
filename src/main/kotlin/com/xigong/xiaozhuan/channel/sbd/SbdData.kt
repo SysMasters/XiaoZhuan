@@ -35,3 +35,24 @@ data class SbdAppInfo(
     val description: String = "",
     val forceUpdate: Int = 0
 )
+
+@JsonClass(generateAdapter = false)
+data class CommonBody(
+    val systemId: String = "sbd_platform",
+    val orgId: String = "713423460730159100",
+    val client_id: String = "sbd_platform_713423460730159100",
+    val client_secret: String = "sbd_platform_713423460730159100",
+    val operatorSystemId: String = "sbd_platform",
+    val operatorOrgId: String = "713423460730159100"
+)
+
+@JsonClass(generateAdapter = false)
+data class SbdOssStsTokenResp(
+    val stsAccessKeyId: String?,
+    val stsAccessKeySecret: String?,
+    val securityToken: String?,
+    val expiration: String?,
+    val stsEndpoint: String?,
+    val stsBucketName: String?,
+    val stsRegionId: String?
+)

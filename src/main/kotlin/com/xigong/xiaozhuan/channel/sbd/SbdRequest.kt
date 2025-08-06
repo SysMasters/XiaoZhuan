@@ -1,13 +1,12 @@
-package com.bxjjren.common.network.entity
+package com.xigong.xiaozhuan.channel.sbd
 
 
 /**
  * 请求数据类型
  */
-class SbdRequest(accessToken: String?, body: Any) {
+class SbdRequest(val accessToken: String?, var body: Any?) {
 
     var head = Head(accessToken)
-    var body: Any? = body
     var tail = Tail()
 
     class Head(val accessToken: String?) {
