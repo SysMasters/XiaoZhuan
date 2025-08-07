@@ -29,9 +29,11 @@ class ApkPageState(val apkConfig: ApkConfig) {
     private val apkInfoState = mutableStateOf<ApkInfo?>(null)
 
     val updateDesc = mutableStateOf(apkConfig.extension.updateDesc ?: "")
+    val updateTitle = mutableStateOf(apkConfig.extension.updateTitle ?: "")
 
 
-    val channels: List<ChannelTask> = ChannelRegistry.channels.filter { apkConfig.channelEnable(it.channelName) }
+    val channels: List<ChannelTask> =
+        ChannelRegistry.channels.filter { apkConfig.channelEnable(it.channelName) }
 
     /**
      * 选中的Channel
@@ -47,6 +49,11 @@ class ApkPageState(val apkConfig: ApkConfig) {
      * 是否开启定时发布
      */
     var enableScheduledRelease by mutableStateOf(false)
+
+    /**
+     * 是否开启强制更新
+     */
+    var enableForceUpdate by mutableStateOf(true)
 
     /**
      * 定时发布的时间
@@ -76,8 +83,11 @@ class ApkPageState(val apkConfig: ApkConfig) {
                 it.setChannelParam(apkConfig.channels)
                 it.selectFile(dir)
             }
-            apkInfoState.value = getApkInfo(apkFile)
+            val apkInfo = getApkInfo(apkFile)
+            apkInfoState.value = apkInfo
             apkDirState.value = dir
+            updateTitle.value = "发现新版本：${apkInfo.versionName}"
+            updateDesc.value = "1.修复已知问题"
             updateSelectChannel()
             true
         } catch (e: Exception) {
@@ -124,10 +134,12 @@ class ApkPageState(val apkConfig: ApkConfig) {
 
     private fun updateApkConfig() {
         val updateDesc = updateDesc.value.trim()
+        val updateTitle = updateTitle.value.trim()
         val apkDir = apkDirState.value ?: return
         val newExtension = apkConfig.extension.copy(
             apkDir = apkDir.absolutePath,
-            updateDesc = updateDesc
+            updateDesc = updateDesc,
+            updateTitle = updateTitle
         )
         scope.launch {
             val configDao = ApkConfigDao()
@@ -177,7 +189,10 @@ class ApkPageState(val apkConfig: ApkConfig) {
     /**
      * 检查当前渠道是否支持提交
      */
-    private fun checkChannelEnableSubmit(channelName: String, message: AtomicReference<String>? = null): Boolean {
+    private fun checkChannelEnableSubmit(
+        channelName: String,
+        message: AtomicReference<String>? = null
+    ): Boolean {
         val task = taskLaunchers.firstOrNull { it.name == channelName } ?: return false
         val marketInfo = (task.getMarketState().value as? MarketState.Success)?.info
         val apkInfo = getApkInfoState().value
@@ -186,7 +201,9 @@ class ApkPageState(val apkConfig: ApkConfig) {
             return false
         }
         val lastVersion = marketInfo?.lastVersion
-        if (apkInfo != null && lastVersion != null && apkInfo.versionCode <= (lastVersion.code?:0)) {
+        if (apkInfo != null && lastVersion != null && apkInfo.versionCode <= (lastVersion.code
+                ?: 0)
+        ) {
             message?.set("要提交的Apk版本号需大于线上最新版本号")
             return false
         }
@@ -216,6 +233,11 @@ class ApkPageState(val apkConfig: ApkConfig) {
             Toast.show("请选择Apk文件")
             return null
         }
+        val updateTitle = updateTitle.value.trim()
+        if (updateTitle.isEmpty()) {
+            Toast.show("请输入更新标题")
+            return null
+        }
         val updateDesc = updateDesc.value.trim()
         if (updateDesc.isEmpty()) {
             Toast.show("请输入更新描述")
@@ -241,9 +263,11 @@ class ApkPageState(val apkConfig: ApkConfig) {
         return UploadParam(
             appId = apkConfig.applicationId,
             updateDesc = updateDesc,
+            updateTitle = updateTitle,
             channels = channels,
             apkFile = file.absolutePath,
-            onlineTime = releaseDate
+            onlineTime = releaseDate,
+            forceUpdate = enableForceUpdate,
         )
     }
 

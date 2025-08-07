@@ -10,20 +10,71 @@ import com.xigong.xiaozhuan.style.AppColors
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerEvent
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.onPointerEvent
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+
+@Composable
+fun UpdateTitleView(updateTitle: MutableState<String>) {
+    val textSize = 14.sp
+    val interactionSource = remember { MutableInteractionSource() }
+    val clearVisible by interactionSource.collectIsHoveredAsState()
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .hoverable(interactionSource)
+
+    ) {
+        val focusRequester = remember { FocusRequester() }
+        OutlinedTextField(
+            value = updateTitle.value,
+            placeholder = {
+                Text(
+                    "请填写更新标题",
+                    color = AppColors.fontGray,
+                    fontSize = textSize
+                )
+            },
+            onValueChange = { updateTitle.value = it },
+            textStyle = TextStyle(fontSize = textSize),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = AppColors.primary,
+                backgroundColor = Color.White
+            ),
+            modifier = Modifier
+                .focusRequester(focusRequester)
+                .fillMaxWidth()
+                .height(52.dp)
+        )
+
+
+        AnimatedVisibility(
+            clearVisible && updateTitle.value.isNotEmpty(),
+            modifier = Modifier.align(Alignment.BottomEnd)
+        ) {
+
+            Image(painter = painterResource("input_clear.png"),
+                contentDescription = "清空",
+                modifier = Modifier
+                    .padding(10.dp)
+                    .clip(CircleShape)
+                    .size(22.dp)
+                    .clickable {
+                        updateTitle.value = ""
+                        focusRequester.requestFocus()
+                    }
+            )
+        }
+
+    }
+}
 
 @Composable
 fun UpdateDescView(updateDesc: MutableState<String>) {

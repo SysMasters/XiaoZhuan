@@ -62,8 +62,10 @@ class UploadVM(
             it.prepare()
         }
         val updateDesc = uploadParam.updateDesc.trim()
+        val updateTitle = uploadParam.updateTitle.trim()
         val onlineTime = uploadParam.onlineTime
-        val versionParams = VersionParams(updateDesc, onlineTime)
+        val forceUpdate = uploadParam.forceUpdate
+        val versionParams = VersionParams(updateDesc, onlineTime, forceUpdate, updateTitle)
         forEach { it.startSubmit(versionParams) }
     }
 

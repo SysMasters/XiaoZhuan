@@ -12,7 +12,25 @@ import com.aliyun.oss.event.ProgressEvent
 import com.aliyun.oss.event.ProgressEventType
 import com.aliyun.oss.event.ProgressListener
 import com.aliyun.oss.model.PutObjectRequest
+import kotlinx.coroutines.runBlocking
 import java.io.File
+
+/**
+ * OSS上传监听器
+ */
+interface OssUploadListener {
+    /**
+     * 上传进度回调
+     * @param progress 进度百分比，取值范围0-1
+     */
+    fun onProgress(progress: Float)
+
+    /**
+     * 上传完成回调
+     * @param success 是否成功
+     */
+    fun onComplete(success: Boolean)
+}
 
 
 /**
@@ -38,7 +56,8 @@ class OssUploadUtil private constructor(
      */
     fun uploadFile(
         localFilePath: String,
-        progressListener: ProgressListener? = null
+        progressListener: ProgressListener? = null,
+        uploadListener: OssUploadListener? = null
     ): Boolean {
         var ossClient: OSS? = null
         return try {
@@ -62,9 +81,8 @@ class OssUploadUtil private constructor(
                 PutObjectRequest(bucketName, objectName, file)
 
             // 设置进度监听器
-            progressListener?.let {
-                putObjectRequest.withProgressListener<PutObjectRequest>(it)
-            }
+            val listener = progressListener ?: DefaultProgressListener(uploadListener)
+            putObjectRequest.withProgressListener<PutObjectRequest>(listener)
 
             // 执行上传
             ossClient.putObject(putObjectRequest)
@@ -72,9 +90,13 @@ class OssUploadUtil private constructor(
         } catch (oe: OSSException) {
             println("OSS异常: ${oe.errorMessage}")
             println("错误代码: ${oe.errorCode}")
+            uploadListener?.onComplete(false)
             false
         } catch (ce: ClientException) {
             println("客户端异常: ${ce.message}")
+            runBlocking {
+                uploadListener?.onComplete(false)
+            }
             false
         } finally {
             // 关闭客户端
@@ -85,7 +107,8 @@ class OssUploadUtil private constructor(
     /**
      * 默认的上传进度监听器
      */
-    open class DefaultProgressListener : ProgressListener {
+    open class DefaultProgressListener(private val uploadListener: OssUploadListener? = null) :
+        ProgressListener {
         private var bytesWritten: Long = 0
         private var totalBytes: Long = -1
         private var isSucceed: Boolean = false
@@ -108,6 +131,10 @@ class OssUploadUtil private constructor(
                     if (totalBytes != -1L) {
                         val percent = (bytesWritten * 100.0 / totalBytes).toInt()
                         println("上传进度: $percent% ($bytesWritten/$totalBytes)")
+
+                        // 回调进度给外部
+                        val progressFloat = (bytesWritten * 1.0f / totalBytes).coerceIn(0f, 1f)
+                        uploadListener?.onProgress(progressFloat)
                     } else {
                         println("已上传: $bytesWritten 字节")
                     }
@@ -116,10 +143,18 @@ class OssUploadUtil private constructor(
                 ProgressEventType.TRANSFER_COMPLETED_EVENT -> {
                     isSucceed = true
                     println("上传成功，总传输: $bytesWritten 字节")
+                    uploadListener?.onProgress(1.0f)
+                    runBlocking {
+                        uploadListener?.onComplete(true)
+                    }
                 }
 
-                ProgressEventType.TRANSFER_FAILED_EVENT ->
+                ProgressEventType.TRANSFER_FAILED_EVENT -> {
                     println("上传失败，已传输: $bytesWritten 字节")
+                    runBlocking {
+                        uploadListener?.onComplete(false)
+                    }
+                }
 
                 else -> {}
             }

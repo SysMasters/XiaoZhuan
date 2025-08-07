@@ -1,7 +1,14 @@
 package com.xigong.xiaozhuan.page.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
@@ -18,6 +25,7 @@ import com.xigong.xiaozhuan.style.AppColors
 import com.xigong.xiaozhuan.widget.Section
 import com.xigong.xiaozhuan.widget.TwoPage
 import com.xigong.xiaozhuan.widget.UpdateDescView
+import com.xigong.xiaozhuan.widget.UpdateTitleView
 
 
 @Composable
@@ -71,6 +79,10 @@ private fun ColumnScope.LeftPage(apkConfig: ApkConfig, viewModel: ApkPageState) 
             Text(text, color = Color.White, fontSize = 14.sp)
         }
 
+    }
+    Spacer(Modifier.height(dividerHeight))
+    Section("更新标题") {
+        UpdateTitleView(viewModel.updateTitle)
     }
     Spacer(Modifier.height(dividerHeight))
     Section("更新描述") {

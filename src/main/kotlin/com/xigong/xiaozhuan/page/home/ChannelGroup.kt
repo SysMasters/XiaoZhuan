@@ -66,7 +66,9 @@ fun ChannelGroup(viewModel: ApkPageState, startUpload: (UploadParam) -> Unit) {
                 )
             }
         }
+
         ScheduleTime(viewModel)
+        ForceUpdate(viewModel)
         Footer(viewModel, startUpload)
     }
 }
@@ -103,6 +105,36 @@ private fun Header(viewModel: ApkPageState) {
             }
         }
         Spacer(Modifier.width(10.dp))
+    }
+}
+
+/**
+ * 强制更新
+ */
+@Composable
+private fun ForceUpdate(viewModel: ApkPageState) {
+    Box(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(AppShapes.roundButton)
+                .align(Alignment.CenterStart)
+                .clickable {
+                    viewModel.enableForceUpdate = !viewModel.enableForceUpdate
+                }
+                .padding(end = 12.dp)) {
+            Checkbox(
+                viewModel.enableForceUpdate,
+                onCheckedChange = { all ->
+                    viewModel.enableForceUpdate = !viewModel.enableForceUpdate
+                },
+                colors = CheckboxDefaults.colors(checkedColor = AppColors.primary)
+            )
+            Text("强制更新")
+        }
+
+
     }
 }
 

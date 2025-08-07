@@ -10,6 +10,10 @@ data class UploadParam(
      */
     val appId: String,
     /**
+     * 更新标题
+     */
+    val updateTitle: String,
+    /**
      * 更新描述
      */
     val updateDesc: String,
@@ -22,6 +26,10 @@ data class UploadParam(
      */
     val apkFile: String,
 
+    /**
+     * 是否强制更新
+     */
+    val forceUpdate: Boolean,
     /**
      * 定时发布的事件,为0 表示立即发布
      */

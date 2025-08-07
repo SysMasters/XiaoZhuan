@@ -69,7 +69,9 @@ data class ApkConfig(
 
     @JsonClass(generateAdapter = true)
     data class Extension(
-        /** 更新描述 */
+        /** 更新标题 */
+        @Json(name = "updateTitle")
+        val updateTitle: String? = null,
         @Json(name = "updateDesc")
         val updateDesc: String? = null,
         /** 上次选择的Apk目录 */
