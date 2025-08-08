@@ -1,11 +1,13 @@
 package com.xigong.xiaozhuan.channel.sbd
 
+import com.xigong.xiaozhuan.BuildConfig
 import com.xigong.xiaozhuan.channel.VersionParams
 import com.xigong.xiaozhuan.log.AppLogger
 import com.xigong.xiaozhuan.log.action
 import com.xigong.xiaozhuan.util.ApkInfo
 import com.xigong.xiaozhuan.util.ProgressChange
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
 class SbdClient {
@@ -24,27 +26,35 @@ class SbdClient {
         progressChange: ProgressChange
     ): Unit = AppLogger.action(LOG_TAG, "提交新版本") {
 
-//        val bucketName = "frontend-static"
-        val bucketName = "hautoosstest"
-//        val objectName = "shoubaodan3.0/app/img/home/shoubaodan_new.apk"
-        val objectName = "file/pac/shoubaodan_new.apk"
+        val bucketName = if (BuildConfig.debug) "hautoosstest" else "frontend-static"
+        val objectName = if (BuildConfig.debug) {
+            "file/pac/shoubaodan_new.apk"
+        } else {
+            "shoubaodan3.0/app/img/home/shoubaodan_new.apk"
+        }
+        val url = if (BuildConfig.debug) {
+            "https://hautoosstest.oss-cn-shanghai.aliyuncs.com"
+        } else {
+            "https://frontend-static.shoubaodan.com"
+        } + "/$objectName"
 
         val ossUploadUtil =
             OssUploadUtil.create(accessKeyId, secretAccessKey, bucketName, objectName)
         ossUploadUtil.uploadFile(
             localFilePath = file.absolutePath,
             uploadListener = object : OssUploadListener {
-                override fun onProgress(progress: Float) {
-                    progressChange.invoke(progress)
+                override suspend fun onProgress(progress: Float) {
+                    // 确保进度回调在主线程执行
+                    withContext(Dispatchers.Main) {
+                        progressChange.invoke(progress)
+                    }
                 }
 
-                override fun onComplete(success: Boolean) {
-                    runBlocking {
-                        if (success) {
-                            saveVersion(account, pwd, apkInfo, versionParams)
-                        }
+                override suspend fun onComplete(success: Boolean) {
+                    if (success) {
+                        AppLogger.info(LOG_TAG, "上传成功: $url")
+                        saveVersion(account, pwd, apkInfo, versionParams, url)
                     }
-
                 }
             }
         )
@@ -67,7 +77,8 @@ class SbdClient {
         account: String,
         pwd: String,
         apkInfo: ApkInfo,
-        versionParams: VersionParams
+        versionParams: VersionParams,
+        url: String
     ): SbdAppInfo? =
         AppLogger.action(LOG_TAG, "新增版本信息") {
             if (token.isNullOrBlank()) {
@@ -78,7 +89,7 @@ class SbdClient {
                 "description" to versionParams.updateDesc,
                 "versionName" to apkInfo.versionName,
                 "versionCode" to apkInfo.versionCode,
-                "url" to apkInfo.path,
+                "url" to url,
                 "forceUpdate" to if (versionParams.forceUpdate) 1 else 0,
                 "appType" to "android",
                 "versionType" to "android",

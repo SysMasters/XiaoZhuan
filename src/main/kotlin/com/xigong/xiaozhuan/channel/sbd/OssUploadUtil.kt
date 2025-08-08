@@ -12,8 +12,11 @@ import com.aliyun.oss.event.ProgressEvent
 import com.aliyun.oss.event.ProgressEventType
 import com.aliyun.oss.event.ProgressListener
 import com.aliyun.oss.model.PutObjectRequest
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 /**
  * OSS上传监听器
@@ -23,13 +26,13 @@ interface OssUploadListener {
      * 上传进度回调
      * @param progress 进度百分比，取值范围0-1
      */
-    fun onProgress(progress: Float)
+    suspend fun onProgress(progress: Float)
 
     /**
      * 上传完成回调
      * @param success 是否成功
      */
-    fun onComplete(success: Boolean)
+    suspend fun onComplete(success: Boolean)
 }
 
 
@@ -54,13 +57,13 @@ class OssUploadUtil private constructor(
      * @param localFilePath 本地文件路径
      * @param progressListener 进度监听器，可为null
      */
-    fun uploadFile(
+    suspend fun uploadFile(
         localFilePath: String,
         progressListener: ProgressListener? = null,
         uploadListener: OssUploadListener? = null
-    ): Boolean {
+    ): Boolean = withContext(Dispatchers.IO) {
         var ossClient: OSS? = null
-        return try {
+        return@withContext try {
             // 创建OSS客户端
             val credentialsProvider: CredentialsProvider =
                 DefaultCredentialProvider(
@@ -90,12 +93,18 @@ class OssUploadUtil private constructor(
         } catch (oe: OSSException) {
             println("OSS异常: ${oe.errorMessage}")
             println("错误代码: ${oe.errorCode}")
-            uploadListener?.onComplete(false)
+            uploadListener?.let { listener ->
+                GlobalScope.launch(Dispatchers.IO) {
+                    listener.onComplete(false)
+                }
+            }
             false
         } catch (ce: ClientException) {
             println("客户端异常: ${ce.message}")
-            runBlocking {
-                uploadListener?.onComplete(false)
+            uploadListener?.let { listener ->
+                GlobalScope.launch(Dispatchers.IO) {
+                    listener.onComplete(false)
+                }
             }
             false
         } finally {
@@ -134,7 +143,12 @@ class OssUploadUtil private constructor(
 
                         // 回调进度给外部
                         val progressFloat = (bytesWritten * 1.0f / totalBytes).coerceIn(0f, 1f)
-                        uploadListener?.onProgress(progressFloat)
+                        // 直接调用suspend函数
+                        uploadListener?.let { listener ->
+                            GlobalScope.launch(Dispatchers.IO) {
+                                listener.onProgress(progressFloat)
+                            }
+                        }
                     } else {
                         println("已上传: $bytesWritten 字节")
                     }
@@ -143,16 +157,22 @@ class OssUploadUtil private constructor(
                 ProgressEventType.TRANSFER_COMPLETED_EVENT -> {
                     isSucceed = true
                     println("上传成功，总传输: $bytesWritten 字节")
-                    uploadListener?.onProgress(1.0f)
-                    runBlocking {
-                        uploadListener?.onComplete(true)
+                    // 直接调用suspend函数
+                    uploadListener?.let { listener ->
+                        GlobalScope.launch(Dispatchers.IO) {
+                            listener.onProgress(1.0f)
+                            listener.onComplete(true)
+                        }
                     }
                 }
 
                 ProgressEventType.TRANSFER_FAILED_EVENT -> {
                     println("上传失败，已传输: $bytesWritten 字节")
-                    runBlocking {
-                        uploadListener?.onComplete(false)
+                    // 直接调用suspend函数
+                    uploadListener?.let { listener ->
+                        GlobalScope.launch(Dispatchers.IO) {
+                            listener.onComplete(false)
+                        }
                     }
                 }
 
@@ -192,14 +212,16 @@ fun main() {
     val ossUploadUtil = OssUploadUtil.create(accessKeyId, secretAccessKey, bucketName, objectName)
 
     // 使用默认进度监听器上传
-    val success = ossUploadUtil.uploadFile(
-        localFilePath,
-        OssUploadUtil.DefaultProgressListener()
-    )
+    kotlinx.coroutines.runBlocking {
+        val success = ossUploadUtil.uploadFile(
+            localFilePath,
+            OssUploadUtil.DefaultProgressListener()
+        )
 
-    if (success) {
-        println("文件上传成功")
-    } else {
-        println("文件上传失败")
+        if (success) {
+            println("文件上传成功")
+        } else {
+            println("文件上传失败")
+        }
     }
 }
