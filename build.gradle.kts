@@ -9,7 +9,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-val appVersion = AppVersion(1, 2, 0)
+val appVersion = AppVersion(1, 3, 0)
 
 @Suppress("SpellCheckingInspection")
 val packageId = "com.xigong.xiaozhuan"
@@ -100,9 +100,9 @@ compose.desktop {
             outputBaseDir.set(project.buildDir.resolve("packages"))
 //            includeAllModules = true
             modules("java.instrument", "java.naming", "java.sql", "jdk.unsupported")
-            packageName = appName
+            packageName = appNameEn
             packageVersion = appVersion.versionName
-            description = "一键上传Apk到多个应用市场，开源，免费"
+            description = "One-click upload APK to multiple app stores, open source, free"
             copyright = "© 2024 Xigong"
             vendor = "Xigong"
 
